@@ -9,6 +9,8 @@
 var t = require('assert');
 var crypto = require('crypto');
 
+var config = require('./config');
+
 var eventListener = require('./listener');
 
 var KafkaConsumer = require('../').KafkaConsumer;
@@ -21,13 +23,14 @@ describe('Consumer', function() {
 
   beforeEach(function() {
     var grp = 'kafka-mocha-grp-' + crypto.randomBytes(20).toString('hex');
-     gcfg = {
+     gcfg = Object.assign({
       'bootstrap.servers': kafkaBrokerList,
+      "socket.keepalive.enable": true,
       'group.id': grp,
       'debug': 'all',
       'rebalance_cb': true,
       'enable.auto.commit': false
-    };
+    }, config);
   });
 
   describe('commit', function() {
@@ -35,7 +38,7 @@ describe('Consumer', function() {
     beforeEach(function(done) {
       consumer = new KafkaConsumer(gcfg, {});
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
         done();
       });
@@ -65,7 +68,7 @@ describe('Consumer', function() {
     beforeEach(function(done) {
       consumer = new KafkaConsumer(gcfg, {});
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
         done();
       });
@@ -151,7 +154,7 @@ describe('Consumer', function() {
     beforeEach(function(done) {
       consumer = new KafkaConsumer(gcfg, {});
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
         consumer.assign([{
           topic: 'test',
@@ -199,7 +202,7 @@ describe('Consumer', function() {
     beforeEach(function(done) {
       consumer = new KafkaConsumer(gcfg, {});
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
         done();
       });
@@ -236,7 +239,7 @@ describe('Consumer', function() {
     beforeEach(function(done) {
       consumer = new KafkaConsumer(gcfg, {});
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
         done();
       });
@@ -272,7 +275,7 @@ describe('Consumer', function() {
     it('should happen gracefully', function(cb) {
       var consumer = new KafkaConsumer(gcfg, tcfg);
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
 
         consumer.disconnect(function() {
@@ -286,7 +289,7 @@ describe('Consumer', function() {
     it('should happen without issue after subscribing', function(cb) {
       var consumer = new KafkaConsumer(gcfg, tcfg);
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
 
         consumer.subscribe([topic]);
@@ -303,7 +306,7 @@ describe('Consumer', function() {
       var consumer = new KafkaConsumer(gcfg, tcfg);
       consumer.setDefaultConsumeTimeout(10000);
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
 
         consumer.subscribe([topic]);
@@ -325,7 +328,7 @@ describe('Consumer', function() {
 
       consumer.setDefaultConsumeTimeout(1);
 
-      consumer.connect({ timeout: 2000 }, function(err, info) {
+      consumer.connect({ timeout: 7000 }, function(err, info) {
         t.ifError(err);
 
         consumer.subscribe([topic]);

@@ -11,6 +11,8 @@ var Kafka = require('../');
 var t = require('assert');
 var crypto = require('crypto');
 
+var config = require('./config');
+
 var eventListener = require('./listener');
 
 var kafkaBrokerList = process.env.KAFKA_HOST || 'localhost:9092';
@@ -23,12 +25,12 @@ describe('Producer', function() {
 
   describe('with dr_cb', function() {
     beforeEach(function(done) {
-      producer = new Kafka.Producer({
+      producer = new Kafka.Producer(Object.assign({
         'client.id': 'kafka-test',
         'metadata.broker.list': kafkaBrokerList,
         'dr_cb': true,
         'debug': 'all'
-      });
+      }, config));
       producer.connect({}, function(err) {
         t.ifError(err);
         done();
@@ -171,12 +173,12 @@ describe('Producer', function() {
 
   describe('with_dr_msg_cb', function() {
     beforeEach(function(done) {
-      producer = new Kafka.Producer({
+      producer = new Kafka.Producer(Object.assign({
         'client.id': 'kafka-test',
         'metadata.broker.list': kafkaBrokerList,
         'dr_msg_cb': true,
         'debug': 'all'
-      });
+      }, config));
       producer.connect({}, function(err) {
         t.ifError(err);
         done();

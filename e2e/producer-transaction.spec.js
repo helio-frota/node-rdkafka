@@ -9,6 +9,8 @@
 
 var Kafka = require('../');
 
+var config = require('./config');
+
 var kafkaBrokerList = process.env.KAFKA_HOST || 'localhost:9092';
 
 describe('Transactional Producer', function () {
@@ -46,32 +48,32 @@ describe('Transactional Producer', function () {
         })
       }
     }
-    producerInput = Kafka.Producer({
+    producerInput = Kafka.Producer(Object.assign({
       'client.id': 'kafka-test',
       'metadata.broker.list': kafkaBrokerList,
       'enable.idempotence': true
-    });
+    }, config));
     producerInput.setPollInterval(100);
     producerInput.connect({}, connectedCb);
 
-    producerTras = new Kafka.Producer({
+    producerTras = new Kafka.Producer(Object.assign({
       'client.id': 'kafka-test',
       'metadata.broker.list': kafkaBrokerList,
       'dr_cb': true,
       'debug': 'all',
       'transactional.id': 'noderdkafka_transactions_send_offset',
       'enable.idempotence': true
-    });
+    }, config));
     producerTras.setPollInterval(100);
     producerTras.connect({}, connectedCb);
 
-    consumerTrans = new Kafka.KafkaConsumer({
+    consumerTrans = new Kafka.KafkaConsumer(Object.assign({
       'metadata.broker.list': kafkaBrokerList,
       'group.id': 'gropu_transaction_consumer',
       'enable.auto.commit': false
     }, {
       'auto.offset.reset': 'earliest',
-    });
+    }, config));
     consumerTrans.connect({}, connectedCb);
   });
 
@@ -198,12 +200,13 @@ describe('Transactional Producer', function () {
 
     it ('should consume committed and uncommitted for read_uncommitted', function(done) {
       var allMsgs = [];
-      var consumer = new Kafka.KafkaConsumer({
+      var conf = Object.assign({
         'metadata.broker.list': kafkaBrokerList,
         'group.id': 'group_read_uncommitted',
         'enable.auto.commit': false,
         'isolation.level': 'read_uncommitted'
-      }, {
+      }, config);
+      var consumer = new Kafka.KafkaConsumer(conf, {
         'auto.offset.reset': 'earliest',
       });
       consumer.connect({}, function(err) {
@@ -232,13 +235,14 @@ describe('Transactional Producer', function () {
 
     it ('should consume only committed for read_committed', function(done) {
       var allMsgs = [];
-      var consumer = new Kafka.KafkaConsumer({
+      var conf = Object.assign({
         'metadata.broker.list': kafkaBrokerList,
         'group.id': 'group_read_committed',
         'enable.partition.eof': true,
         'enable.auto.commit': false,
         'isolation.level': 'read_committed'
-      }, {
+      }, config);
+      var consumer = new Kafka.KafkaConsumer(conf, {
         'auto.offset.reset': 'earliest',
       });
       consumer.connect({}, function(err) {
@@ -291,12 +295,13 @@ describe('Transactional Producer', function () {
 
     it('should consume only committed', function(done) {
       var gotB = false;
-      var consumer = new Kafka.KafkaConsumer({
+      var conf = Object.assign({
         'metadata.broker.list': kafkaBrokerList,
         'group.id': 'group_default',
         'enable.partition.eof': true,
         'enable.auto.commit': false,
-      }, {
+      },config);
+      var consumer = new Kafka.KafkaConsumer(conf, {
         'auto.offset.reset': 'earliest',
       });
       consumer.connect({}, function(err) {

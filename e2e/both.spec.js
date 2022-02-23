@@ -10,6 +10,8 @@
 var crypto = require('crypto');
 var t = require('assert');
 
+var config = require('./config');
+
 var Kafka = require('../');
 var kafkaBrokerList = process.env.KAFKA_HOST || 'localhost:9092';
 var eventListener = require('./listener');
@@ -43,16 +45,16 @@ describe('Consumer/Producer', function() {
 
     var grp = 'kafka-mocha-grp-' + crypto.randomBytes(20).toString('hex');
 
-    consumer = new Kafka.KafkaConsumer({
+    consumer = new Kafka.KafkaConsumer(Object.assign({
       'metadata.broker.list': kafkaBrokerList,
       'group.id': grp,
       'fetch.wait.max.ms': 1000,
-      'session.timeout.ms': 10000,
+      'session.timeout.ms': 20000,
       'enable.auto.commit': true,
       'enable.partition.eof': true,
       'debug': 'all'
       // paused: true,
-    }, {
+    }, config), {
       'auto.offset.reset': 'largest'
     });
 
@@ -64,13 +66,13 @@ describe('Consumer/Producer', function() {
 
     eventListener(consumer);
 
-    producer = new Kafka.Producer({
+    producer = new Kafka.Producer(Object.assign({
       'client.id': 'kafka-mocha',
       'metadata.broker.list': kafkaBrokerList,
       'fetch.wait.max.ms': 1,
       'debug': 'all',
       'dr_cb': true
-    }, {
+    }, config), {
       'produce.offset.report': true
     });
 
@@ -190,7 +192,7 @@ describe('Consumer/Producer', function() {
         // Set the timeout to 2000ms to see that it actually waits the whole time
         // (Needs to be higher than fetch.max.wait.ms which is 1000 here
         // to ensure we don't only wait that long)
-        consumer.setDefaultConsumeTimeout(2000);
+        consumer.setDefaultConsumeTimeout(7000);
         consumer.consume(100000, function(err, messages) {
           t.ifError(err);
           t.ok(Date.now() - start >= 1998);
@@ -228,8 +230,8 @@ describe('Consumer/Producer', function() {
 
       setTimeout(function() {
         producer.produce(topic, null, buffer, null);
-      }, 500)
-      consumer.setDefaultConsumeTimeout(2000);
+      }, 6000)
+      consumer.setDefaultConsumeTimeout(8000);
       consumer.consume(1000, function(err, messages) {
         t.ifError(err);
         t.equal(messages.length, 1);
@@ -261,8 +263,8 @@ describe('Consumer/Producer', function() {
 
       setTimeout(function() {
         producer.produce(topic, null, buffer, null);
-      }, 2000)
-      consumer.setDefaultConsumeTimeout(3000);
+      }, 9000)
+      consumer.setDefaultConsumeTimeout(1100);
       consumer.consume(1000, function(err, messages) {
         t.ifError(err);
         t.equal(messages.length, 1);
@@ -300,7 +302,7 @@ describe('Consumer/Producer', function() {
 
       setTimeout(function() {
         producer.produce(topic, null, buffer, key);
-      }, 2000);
+      }, 20000);
 
     });
   });
@@ -337,11 +339,11 @@ describe('Consumer/Producer', function() {
 
       setTimeout(function() {
         producer.produce(topic, null, buffer);
-      }, 2000);
+      }, 10000);
 
       setTimeout(function() {
         producer.produce(topic, null, buffer);
-      }, 4000);
+      }, 20000);
 
       setTimeout(function() {
         t.deepStrictEqual(events, ['partition.eof', 'data', 'partition.eof', 'data', 'partition.eof']);
@@ -353,7 +355,7 @@ describe('Consumer/Producer', function() {
             startOffset + 1,
             startOffset + 2 ]);
         done();
-      }, 6000);
+      }, 30000);
     });
   });
 
@@ -449,7 +451,7 @@ describe('Consumer/Producer', function() {
 
     setTimeout(function() {
       producer.produce(topic, null, value, key);
-    }, 2000);
+    }, 20000);
   });
 
   it('should be able to produce and consume messages: empty key and empty value', function(done) {
@@ -470,7 +472,7 @@ describe('Consumer/Producer', function() {
 
     setTimeout(function() {
       producer.produce(topic, null, value, key);
-    }, 2000);
+    }, 20000);
   });
 
   it('should be able to produce and consume messages: null key and null value', function(done) {
@@ -490,12 +492,12 @@ describe('Consumer/Producer', function() {
 
     setTimeout(function() {
       producer.produce(topic, null, value, key);
-    }, 2000);
+    }, 20000);
   });
 
   describe('Exceptional case -  offset_commit_cb true', function() {
     var grp = 'kafka-mocha-grp-' + crypto.randomBytes(20).toString('hex');
-    var consumerOpts = {
+    var consumerOpts = Object.assign({
       'metadata.broker.list': kafkaBrokerList,
       'group.id': grp,
       'fetch.wait.max.ms': 1000,
@@ -503,7 +505,7 @@ describe('Consumer/Producer', function() {
       'enable.auto.commit': false,
       'debug': 'all',
       'offset_commit_cb': true
-    };
+    }, config);
 
     beforeEach(function(done) {
       consumer = new Kafka.KafkaConsumer(consumerOpts, {
@@ -568,7 +570,7 @@ describe('Consumer/Producer', function() {
 
       setTimeout(function() {
         producer.produce(topic, null, value, key);
-      }, 2000);
+      }, 20000);
     });
   });
 
@@ -582,7 +584,7 @@ describe('Consumer/Producer', function() {
     });
 
     it('should callback offset_commit_cb after commit', function(done) {
-      var consumerOpts = {
+      var consumerOpts = Object.assign({
           'metadata.broker.list': kafkaBrokerList,
           'group.id': grp,
           'fetch.wait.max.ms': 1000,
@@ -592,7 +594,7 @@ describe('Consumer/Producer', function() {
           'offset_commit_cb': function(offset) {
              done();
         }
-      };
+      }, config);
       consumer = new Kafka.KafkaConsumer(consumerOpts, {
         'auto.offset.reset': 'largest',
       });

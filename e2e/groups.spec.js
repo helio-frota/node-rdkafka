@@ -10,6 +10,8 @@
 var crypto = require('crypto');
 var t = require('assert');
 
+var conf = require('./config');
+
 var Kafka = require('../');
 var kafkaBrokerList = process.env.KAFKA_HOST || 'localhost:9092';
 var eventListener = require('./listener');
@@ -20,23 +22,23 @@ describe('Consumer group/Producer', function() {
   var consumer;
   var grp = 'kafka-mocha-grp-' + crypto.randomBytes(20).toString('hex');
 
-  var config = {
-    'metadata.broker.list': kafkaBrokerList,
+  var config = Object.assign({
+    'bootstrap.servers': kafkaBrokerList,
     'group.id': grp,
-    'fetch.wait.max.ms': 1000,
-    'session.timeout.ms': 10000,
+    'fetch.wait.max.ms': 3000,
+    'session.timeout.ms': 20000,
     'enable.auto.commit': false,
     'debug': 'all'
-  };
+  }, conf);
 
   beforeEach(function(done) {
-    producer = new Kafka.Producer({
+    producer = new Kafka.Producer(Object.assign({
       'client.id': 'kafka-mocha',
-      'metadata.broker.list': kafkaBrokerList,
+      'bootstrap.servers': kafkaBrokerList,
       'fetch.wait.max.ms': 1,
       'debug': 'all',
       'dr_cb': true
-    });
+    }, config));
 
     producer.connect({}, function(err, d) {
       t.ifError(err);

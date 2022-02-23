@@ -10,6 +10,8 @@
 var Kafka = require('../');
 var t = require('assert');
 
+var config = require('./config');
+
 var eventListener = require('./listener');
 var kafkaBrokerList = process.env.KAFKA_HOST || 'localhost:9092';
 var time = Date.now();
@@ -74,9 +76,9 @@ describe('Admin', function() {
   var producer;
 
   before(function(done) {
-    producer = new Kafka.Producer({
-      'metadata.broker.list': kafkaBrokerList,
-    });
+    producer = new Kafka.Producer(Object.assign({
+      'metadata.broker.list': kafkaBrokerList
+    }, config));
     producer.connect(null, function(err) {
       t.ifError(err);
       done();
@@ -90,10 +92,10 @@ describe('Admin', function() {
   });
 
   beforeEach(function() {
-    client = Kafka.AdminClient.create({
-      'client.id': 'kafka-test',
-      'metadata.broker.list': kafkaBrokerList
-    });
+    client = Kafka.AdminClient.create(Object.assign({
+      'metadata.broker.list': kafkaBrokerList,
+      'client.id': 'kafka-test'
+    }, config));
   });
 
   describe('createTopic', function() {
@@ -102,8 +104,9 @@ describe('Admin', function() {
       client.createTopic({
         topic: topicName,
         num_partitions: 1,
-        replication_factor: 1
+        replication_factor: 3
       }, function(err) {
+        console.log(err);
         pollForTopic(producer, topicName, 10, 1000, function(err) {
           t.ifError(err);
           done();
@@ -130,7 +133,7 @@ describe('Admin', function() {
       client.createTopic({
         topic: topicName,
         num_partitions: 1,
-        replication_factor: 1
+        replication_factor: 3
       }, function(err) {
         pollForTopic(producer, topicName, 10, 1000, function(err) {
           t.ifError(err);
@@ -150,7 +153,7 @@ describe('Admin', function() {
       client.createTopic({
         topic: topicName,
         num_partitions: 1,
-        replication_factor: 1
+        replication_factor: 3
       }, function(err) {
         pollForTopic(producer, topicName, 10, 1000, function(err) {
           t.ifError(err);
@@ -171,7 +174,7 @@ describe('Admin', function() {
       client.createTopic({
         topic: topicName,
         num_partitions: 4,
-        replication_factor: 1
+        replication_factor: 3
       }, function(err) {
         pollForTopic(producer, topicName, 10, 1000, function(err) {
           t.ifError(err);
